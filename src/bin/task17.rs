@@ -98,25 +98,28 @@ impl Cache {
     fn remove(&mut self, key: &str) -> Result<(), String> {
         match self.store.remove(key) {
             Some(_v) => Ok(()),
-            None => Err(String::from("Key not found"))
+            None => Err(format!("Key '{}' not found", key))
         }
     }
 
     fn stats(&self) {
-        for entry in self.store.values() {
-            let mut text_used = 0;
-            let mut numeric_used = 0;
-            let mut boolean_used = 0;
+        let mut text_count = 0;
+        let mut numeric_count = 0;
+        let mut boolean_count = 0;
 
-            match entry.value {
-                CacheValue::Text(_) => text_used += 1,
-                CacheValue::Numeric(_) => numeric_used += 1,
-                CacheValue::Boolean(_) => boolean_used += 1,
+        for entry in self.store.values() {
+
+
+            match &entry.value {
+                CacheValue::Text(_) => text_count += 1,
+                CacheValue::Numeric(_) => numeric_count += 1,
+                CacheValue::Boolean(_) => boolean_count += 1,
             }
-            
-            let all_used = text_used + numeric_used + boolean_used;
-            println!("STATS:\n Total entries: {}\nText: {}\nNumeric: {}\nBoolean: {}", all_used, text_used, numeric_used, boolean_used);
         }
+
+        println!("--- CACHE STATS ---");
+        println!("Total entries: {}", self.store.len());
+        println!("Strings: {}, Numbers: {}, Booleans: {}", text_count, numeric_count, boolean_count);
     }
 }
 
