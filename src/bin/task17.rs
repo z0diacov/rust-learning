@@ -43,9 +43,10 @@
 use std::collections::HashMap;
 use std::time::{Instant, Duration};
 
+#[derive(Debug)]
 enum CacheValue {
     Text(String),
-    Nimeric(i64),
+    Numeric(i64),
     Boolean(bool)
 }
 
@@ -56,13 +57,13 @@ struct CacheEntry {
 }
 
 struct Cache {
-    store: std::collections::HashMap<String, CacheEntry>
+    store: HashMap<String, CacheEntry>
 }
 
 impl Cache {
     fn new() -> Self {
         Self {
-            store: std::collections::HashMap::new()
+            store: HashMap::new()
         }
     }
 
@@ -100,12 +101,69 @@ impl Cache {
             None => Err(String::from("Key not found"))
         }
     }
+
+    fn stats(&self) {
+        for entry in self.store.values() {
+            let mut text_used = 0;
+            let mut numeric_used = 0;
+            let mut boolean_used = 0;
+
+            match entry.value {
+                CacheValue::Text(_) => text_used += 1,
+                CacheValue::Numeric(_) => numeric_used += 1,
+                CacheValue::Boolean(_) => boolean_used += 1,
+            }
+            
+            let all_used = text_used + numeric_used + boolean_used;
+            println!("STATS:\n Total entries: {}\nText: {}\nNumeric: {}\nBoolean: {}", all_used, text_used, numeric_used, boolean_used);
+        }
+    }
 }
-
-
 
 
 fn main() {
+    use std::{thread::sleep, time::Duration};
 
+    let mut cache = Cache::new();
+
+    cache.set("name", CacheValue::Text("Arsenii".to_string()), 10);
+    cache.set("age", CacheValue::Numeric(17), 5);
+    cache.set("active", CacheValue::Boolean(true), 3);
+
+    println!("--- Initial stats ---");
+    cache.stats();
+
+    println!("\n--- Get values ---");
+    if let Some(value) = cache.get("name") {
+        match value {
+            CacheValue::Text(s) => println!("name: {s}"),
+            CacheValue::Numeric(n) => println!("name (num): {n}"),
+            CacheValue::Boolean(b) => println!("name (bool): {b}"),
+        }
+    }
+
+    println!("\n--- TTL test ---");
+    cache.set("temp", CacheValue::Text("temporary".to_string()), 2);
+
+    println!("temp before sleep: {:?}", cache.get("temp"));
+
+    sleep(Duration::from_secs(3));
+
+    println!("temp after sleep: {:?}", cache.get("temp"));
+
+
+    println!("\n--- Remove ---");
+    match cache.remove("age") {
+        Ok(()) => println!("age removed"),
+        Err(e) => println!("error: {e}"),
+    }
+
+    match cache.remove("unknown") {
+        Ok(()) => println!("unknown removed"),
+        Err(e) => println!("error: {e}"),
+    }
+
+
+    println!("\n--- Final stats ---");
+    cache.stats();
 }
-
